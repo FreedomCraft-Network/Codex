@@ -1,0 +1,58 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+
+      - name: Grant execute permissions for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew build
+        env:
+          GITHUB_USERNAME: ${{ secrets.PACKAGES_ACCESS_USER }}
+          GITHUB_TOKEN: ${{ secrets.PACKAGES_ACCESS_TOKEN }}
+          NO_INCREMENT_VERSION: true
+
+      - name: Get the version
+        id: get_version
+        run: |
+          echo NAME=$(grep "name=" gradle.properties | cut -d'=' -f2) >> $GITHUB_OUTPUT
+          echo MCVERSION=$(grep "mcVersion=" gradle.properties | cut -d'=' -f2) >> $GITHUB_OUTPUT
+          echo VERSION=$(grep "buildNumber=" version.properties | cut -d'=' -f2) >> $GITHUB_OUTPUT
+
+      - name: Create GitHub release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.MCVERSION }}-${{ steps.get_version.outputs.VERSION }}
+          release_name: Release Build ${{ steps.get_version.outputs.MCVERSION }}-${{ steps.get_version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload_release_asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./Release/${{ steps.get_version.outputs.NAME }}-${{ steps.get_version.outputs.MCVERSION }}-${{ steps.get_version.outputs.VERSION }}.jar
+          asset_name: ${{ steps.get_version.outputs.NAME }}-${{ steps.get_version.outputs.MCVERSION }}-${{ steps.get_version.outputs.VERSION }}.jar
+          asset_content_type: application/java-archive
