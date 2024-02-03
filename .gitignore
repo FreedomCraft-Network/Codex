@@ -2,6 +2,6 @@
 .settings/
 bin/
 build/
-gradle/
 /.gradle/
 /.idea/
+/Release/
