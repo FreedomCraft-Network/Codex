@@ -112,8 +112,6 @@ repositories {
 
 dependencies {
     paperweight.paperDevBundle("${mcVersion}-R0.1-SNAPSHOT")
-
-    compileOnly("com.zaxxer:HikariCP:4.0.3")
     compileOnly("me.clip:placeholderapi:2.11.1")
 
     //WorldEdit API
@@ -126,6 +124,8 @@ dependencies {
     }
 
     compileOnly("io.lumine:Mythic-Dist:5.3.5")
+
+    implementation("com.zaxxer:HikariCP:4.0.3")
 }
 
 java {
