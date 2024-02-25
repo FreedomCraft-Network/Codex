@@ -2,6 +2,7 @@ package cx.ajneb97.listeners;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -44,16 +45,23 @@ public class JugadorListener implements Listener{
 			List<EntradaCodex> entradas = categoria.getEntradas();
 			for(final EntradaCodex entrada : entradas) {
 				String nombreRegion = entrada.getDiscoveredOnRegion();
-				if(nombreRegion != null && region.equals(nombreRegion)) {
-					plugin.getJugadorDataManager().agregarEntrada(jugador, categoria.getPath(), entrada.getId(), new AgregarEntradaCallback() {
-						@Override
-						public void onDone(boolean agrega) {
-							if(agrega) {
-								plugin.getCodexManager().desbloquearEntrada(jugador, categoria, entrada);
+				if(nombreRegion != null) {
+					boolean matches = region.equals(nombreRegion);
+					if (!matches && nombreRegion.length() > 2 && nombreRegion.charAt(0) == '/' && nombreRegion.charAt(nombreRegion.length() - 1) == '/') {
+						Pattern pattern = Pattern.compile(nombreRegion.substring(1, nombreRegion.length() - 1));
+						matches = pattern.matcher(region).matches();
+					}
+					if (matches) {
+						plugin.getJugadorDataManager().agregarEntrada(jugador, categoria.getPath(), entrada.getId(), new AgregarEntradaCallback() {
+							@Override
+							public void onDone(boolean agrega) {
+								if (agrega) {
+									plugin.getCodexManager().desbloquearEntrada(jugador, categoria, entrada);
+								}
 							}
-						}
-					});
-					return;
+						});
+						return;
+					}
 				}
 			}
 		}
